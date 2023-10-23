@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<!-- saved from url=(0114)https://marcotm.com/articles/information-extraction-with-large-language-models-parsing-unstructured-data-with-gpt/ -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3</title>
+    <link rel="stylesheet" href="./Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3_files/tailwind.css">
+    <link rel="stylesheet" href="./Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3_files/highlight-dark.css">
+
+    <meta property="og:site_name" content="marcotm.com">
+    <meta name="author" content="Marco Maier">
+
+    
+    <meta name="description" content="A little write-up on how to use large language models such as GPT to extract information from unstructured texts.">
+    
+
+    
+
+    
+    <meta property="og:title" content="Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3">
+    
+
+    
+    <meta property="og:description" content="A little write-up on how to use large language models such as GPT to extract information from unstructured texts.">
+    
+
+    
+    <meta property="og:type" content="article">
+
+    
+    <meta property="article:published_time" content="2023-03-11">
+    <meta property="article:modified_time" content="2023-03-19">
+    <meta property="article:author" content="https://marcotm.com">
+    
+
+    
+
+    <meta property="profile:first_name" content="Marco">
+    <meta property="profile:last_name" content="Maier">
+
+    
+
+    
+
+
+
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@mtmlog">
+    
+    <meta name="twitter:title" content="Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3">
+    
+    
+    <meta name="twitter:description" content="A little write-up on how to use large language models such as GPT to extract information from unstructured texts.">
+    
+    
+
+    <link rel="alternate" type="application/atom+xml" title="Articles &amp; Notes from marcotm.com" href="https://marcotm.com/feed/atom">
+<link rel="alternate" type="application/rss+xml" title="Articles &amp; Notes from marcotm.com" href="https://marcotm.com/feed">
+
+    <script defer="" data-api="/pa/event" data-domain="marcotm.com" src="./Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3_files/script.js"></script>
+</head>
+
+<body class="bg-stone-300 font-sans leading-normal text-stone-700">
+    <div class="min-h-screen flex flex-col">
+        <div class="font-serif px-4 md:px-8 py-4 flex flex-row justify-between">
+            <div>
+                <a href="https://marcotm.com/" class="main-nav-element">Dr. Marco Maier</a>
+            </div>
+            <div class="hidden sm:block">
+                <ul class="flex flex-row gap-4">
+                    <li><a href="https://marcotm.com/" class="main-nav-element">Start here</a></li>
+                    <li><a href="https://marcotm.com/now" class="main-nav-element">Now</a></li>
+                    <li><a href="https://marcotm.com/about" class="main-nav-element">About</a></li>
+                    <li><a href="https://marcotm.com/contact" class="main-nav-element">Contact</a></li>
+                </ul>
+            </div>
+            <div class="flex-none sm:hidden">
+                <a role="button" class="navbar-burger text-stone-700" data-target="navMenu">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </a>
+            </div>
+
+        </div>
+
+        <div id="navMenu" class="mb-4 bg-stone-100 hidden sm:hidden">
+            <ul class="flex flex-col">
+                <li><a href="https://marcotm.com/" class="text-stone-700 block px-4 py-2">Start here</a></li>
+                <li><a href="https://marcotm.com/now" class="text-stone-700 block px-4 py-2 bg-stone-200">Now</a></li>
+                <li><a href="https://marcotm.com/about" class="text-stone-700 block px-4 py-2">About</a></li>
+                <li><a href="https://marcotm.com/contact" class="text-stone-700 block px-4 py-2 bg-stone-200">Contact</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <div class="my-16 px-4 md:px-0">
+
+  <div class="mx-auto max-w-screen-lg mb-8 prose md:prose-xl prose-stone font-serif text-stone-800">
+    <h1 class="mb-0">Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3</h1>
+    <div class="text-stone-500">
+      published: 2023-03-11 | updated:
+      2023-03-19 
+    </div>
+  </div>
+
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>In the past months, ChatGPT has been dominating the news headlines, and people are both excited and scared by its quite sophisticated ability to generate texts. Besides short- and long-form text generation, there are quite a few other use cases which provide a lot of practical value. With the current generation of these large language models (LLMs), many of the classic tasks in Natural Language Processing (NLP) such as text classification, sentiment analysis, or named entity recognition, are almost trivial to solve.</p><p>In this article, I have documented some experimentation with how to use GPT-3 (<em>update: and 3.5</em>) to extract structured information from unstructured texts and I hope the article can serve as a tutorial for how to approach such a task with an LLM. The article assumes some familiarity with GPT-3 or ChatGPT, so if you never <a href="https://chat.openai.com/">tried it</a>, it might make sense to spend five minutes to get a feeling for how these things generally work. </p><h2>A real-world data set - "Who is Hiring" posts on Hacker News</h2><p>Many of the existing tutorials I have come across only give some simple toy examples. I wanted to understand the potential challenges of the taken approach using a real dataset. When I was going through potential contract/remote opportunities on Hacker News, it occurred to me that these regular stories such as "Ask HN: Who is hiring?" could benefit from a more compact, structured presentation. Since the data from the Hacker News stories is easily available through various APIs (<a href="https://github.com/HackerNews/API" title="official">official</a>, <a href="https://hn.algolia.com/api" title="Algolia">Algolia</a>), it provided the perfect starting point for some realistic experimentation.</p><p>Before going through the technical details, feel free to check out the resulting demonstrator: <a href="https://www.hacker-jobs.com/">hacker-jobs.com</a></p><h2>Getting the data - Algolia's HN Search API</h2><p><a href="https://news.ycombinator.com/">Hacker News</a> is a community site for discussing "anything that gratifies one's intellectual curiosity". Besides the discussions, there are monthly posts ("stories") for job ads. The main one is the regular "Ask HN: Who is Hiring?" post. Since these stories are always created by the user/bot "whoishiring", one can easily search for the respective posts using Algolia's HN Search API:</p><p><code>https://hn.algolia.com/api/v1/search_by_date?tags=ask_hn,author_whoishiring</code></p><p>There are some other regular related posts such as "Ask HN: Freelancer? Seeking freelancer?" managed by the same user account, so you have to filter the above results for only the "Who is Hiring" posts. For the relevant posts, you can get the comments, i.e., the actual job ads, by accessing the respective item via its ID: <code>https://hn.algolia.com/api/v1/items/&lt;ITEM_ID&gt;</code>. The comments are contained in the <code>children</code> array. We only need the top-level children because it is a convention that job descriptions are posted as a new comment without any nesting.</p><p>At the time of writing this article, the most recent issue of the stories was <a href="https://news.ycombinator.com/item?id=34612353">February 2023</a>. I wanted to leave the latest issue as a kind of test set, so I started experimenting with the January 2023 data. There are typically around 400 to 600 "Who is Hiring" comments per month. I actually did not even use this many samples for the first iterations but started with around 50 to 100 comments, i.e., job descriptions.</p><h2>Extracting information - A zero-shot model based on GPT-3</h2><p>In machine learning, we often need a lot of samples to train a model to do something useful. Depending on the specific task, creating such a data set might or might not be feasible. One technique to drastically reduce the amount of data needed is to start with a model which was already trained on a somehow similar task and to fine-tune it on the intended task. With this approach, we often need only a few thousand training examples instead of millions or billions when training from scratch.</p><p>Ultimately, though, we would be even more happy if we needed not thousands but just a handful examples to teach a model how a certain task should be solved. This scenario is called <em>few-shot learning</em>. In the most extreme case, we do not want to give any concrete examples at all, but instruct the model in a different way. This is called <em>zero-shot learning</em>.</p><p>GPT-3 along with other recent LLMs allows for building zero-shot models on a completely new level. As you probably know, the main way to interact with these LLMs is by writing a so-called <em>prompt</em> (i.e., some text), which then gets "completed" (i.e., extended with more text) by the model. Earlier language models were able to generate text based on an initial sequence, but mostly lost the actual context very quickly. The resulting texts were structurally/grammatically correct, but were relatively meaningless and thus quite useless. This has changed with the really large models such as GPT-3. These models are able to stay within a given context a lot better and can produce quite long sequences of coherent text. A kind of side effect of this characteristic is that we can get creative with the initial sequence (i.e., the prompt) we feed into the model. For example, if we start with a question or a task description, the most reasonable way to extend such a text fragment for the model is to provide the answer or solve the task.</p><p>This is where things get really interesting because we can try to create a prompt that describes the task of extracting certain information from a provided text, and we can even describe the format in which the result should be given. Usually, it takes some experimentation to find a suitable prompt. This process is often called <em>prompt engineering</em>. While it usually makes sense to have some kind of evaluation framework for testing different prompts (<a href="https://marcotm.com/articles/evaluation-driven-machine-learning">similar to building other types of machine learning models</a>), if you do this for the first time, the most intuitive way is to use the official <a href="https://platform.openai.com/playground">GPT-3 Playground</a> or the <a href="https://chat.openai.com/">ChatGPT interface</a> in which you can simply write prompts and have them completed by the model.</p><p>My process for finding a suitable prompt consisted of some ad-hoc experimentation in the Playground to come up with some candidates that seemed to work. I then tested these candidates by using the official <a href="https://platform.openai.com/docs/api-reference/introduction">GPT-3 API</a> on about 50 job ads from January 2023 and examined the produced results manually to get a feeling for the error cases and how to improve the prompt. This process was repeated a few times. Doing the evaluation manually usually is not the best idea, but in this case, coming up with a helpful automatic evaluation would have presented its own challenges because there is no clear, single solution for the task (you will understand that in a minute). All in all, I spent about $10 to $15 in this process. The final prompt I came up with is the following:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-plaintext"><code class="hljs language-plaintext">Your task is to parse an unstructured job posting and turn it into a JSON containing the most important information. The job posting can describe one or more jobs at the same company. The JSON should consist of the following information:
+ - The company name (field name: "companyName", field type: string)
+ - the location of the company (field name: "companyLocation", field type: string); if not explictily stated, you can try to infer the company's actual location from other clues, e.g., something like "Remote (US)" usually means that the company is located in the US; if the location cannot be inferred, set it to null
+ - a short description of what the company is doing or building (field name: "companyDescription", field type: string); try to keep it short (max length: ca. 300 characters)
+ - a list of advertised jobs (field name: "jobs", field type: array).
+Each element of the "jobs" array should contain the following fields:
+ - The job title (field name: "jobTitle", field type: string); the job title should be given in the singular form (i.e., Frontend Developer instead of Frontend Developers)
+ - the salary range (field name: "salary", field type: string); only include explictly stated salary amounts, otherwise set to null
+ - whether equity is part of the compensation (field name: "equity", field type: boolean)
+ - the benefits (field name: "benefits", field type: string); include things like 401k, insurance, equipment, child care, etc. if stated, otherwise set to null
+ - the location of the job (field name: "location", field type: string)
+ - whether this is a job for senior/experienced candidates (field name: "senior", field type: boolean); typically senior, staff, lead, principal, vp, cto, etc. positions are all regarded as senior level
+ - whether it is a remote opportunity (field name: "remote", field type: boolean)
+ - whether it can be done onsite from an office (field name: "onsite", field type: boolean)
+ - whether it can be done part-time (field name: "partTime", field type: boolean)
+ - whether it can be done full-time (field name: "fullTime", field type: boolean)
+ - the URL to the specific job description (field name: "jobUrl", field type: string)
+ - and any specific requirements/skills that might be stated (field name: "requirements", field type: string).
+In general, if certain information is not stated, set the respective field to null. If the company seeks more than one person for the same role, include the role only once.
+
+This is the job posting:
+
+%s
+
+The structured JSON representation is:
+```json
+{"companyName":</code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>Here are the main ideas and observations that led to this prompt:</p><ul><li><p>The prompt first describes the general task ("turn unstructured job posting [..] into a JSON").</p></li><li><p>I also mention that a job posting could advertise several roles/jobs.</p></li><li><p>Then I describe the desired output format in detail. For each field, I specify the field name and the field type.</p></li><li><p>For some fields, I give additional hints which mostly came from observed error cases or undesirable behavior, e.g., roles are sometimes written in singular and sometimes in plural form which the original prompt copied verbatim, but which I wanted to standardize.</p></li><li><p>I also list more fields than I am actually interested in. With fewer fields, it seemed to be more likely that the wrong but somehow related information was picked for a field. By introducing fields for almost every relevant information, the results seemed to be more accurate.</p></li><li><p>I also let the model know that it is ok to set a field to <code>null</code> in case the information is missing.</p></li><li><p>In a previous version, in some cases a role would be listed twice without any differences. The reason was that the posting stated that the company was looking for, e.g., two developers. Hence, I added the instruction to include those only once which completely solved the issue.</p></li><li><p>After the instructions, I add the original job posting. <em>Please note: </em><code>%s</code><em> is a placeholder that is used in Python for string formatting. In the actual prompt fed into the model, it is replaced by the full job posting.</em></p></li><li><p>Then I announce the JSON representation.</p></li><li><p>One trick I've seen elsewhere is to start the JSON with <code>```json</code> which is a typical way in some markup/markdown languages to include code and similar texts in a document.</p></li><li><p>Finally, I also write the first part of the actual JSON that should be completed.</p></li></ul><p>As an example, let's take this <a href="https://news.ycombinator.com/item?id=34618247">post</a> from February 2023:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-plaintext"><code class="hljs language-plaintext">Friendly Captcha | Software Engineer (Full-stack) | REMOTE (domiciled within EU only) | PART-TIME or FULL-TIME | Office in Munich, Germany | https://friendlycaptcha.com
+At Friendly Captcha we do one thing and we do it well: we protect websites from malicious actors and bots. We provide privacy-friendly and accessible anti-bot solutions that don’t annoy users with tasks like clicking fire hydrants.
+We’re a fast-growing, profitable company. Our revenue mostly comes from medium to large European enterprise and governments.
+A great fit would be someone who can contribute across the entire stack, and prefers to keep things simple (perhaps boring is the right word even?). Good knowledge of the web and browser APIs is definitely useful in this role. At our scale we are looking for generalists more than specialists - it's inevitable you will be wearing different hats.
+Our engineering team is fully remote across Europe, we meet up once per quarter or so. You can work either 4 or 5 days per week, fully remote or from our Munich office.
+Stack: Golang | Typescript | Clickhouse | Postgres | Redis | Python ML/data science stack</code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>When feeding the above prompt (with the above job post inserted) into the GPT-3 <strong>Davinci</strong> model, we get the following result:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-JSON"><code class="hljs language-JSON"><span class="hljs-punctuation">{</span>
+  <span class="hljs-attr">"companyName"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Friendly Captcha"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"companyLocation"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Munich, Germany"</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"companyDescription"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"At Friendly Captcha we do one thing and we do it well: we protect websites from malicious actors and bots. We provide privacy-friendly and accessible anti-bot solutions that don’t annoy users with tasks like clicking fire hydrants."</span><span class="hljs-punctuation">,</span>
+  <span class="hljs-attr">"jobs"</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">[</span>
+    <span class="hljs-punctuation">{</span>
+      <span class="hljs-attr">"jobTitle"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Software Engineer (Full-stack)"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"salary"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">null</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"equity"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">null</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"benefits"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">null</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"location"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"REMOTE (domiciled within EU only)"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"senior"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">false</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"remote"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">true</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"onsite"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">true</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"partTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">true</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"fullTime"</span><span class="hljs-punctuation">:</span> <span class="hljs-keyword">true</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"jobUrl"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"https://friendlycaptcha.com"</span><span class="hljs-punctuation">,</span>
+      <span class="hljs-attr">"requirements"</span><span class="hljs-punctuation">:</span> <span class="hljs-string">"Good knowledge of the web and browser APIs; Stack: Golang | Typescript | Clickhouse | Postgres | Redis | Python ML/data science stack"</span>
+    <span class="hljs-punctuation">}</span>
+  <span class="hljs-punctuation">]</span>
+<span class="hljs-punctuation">}</span></code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>Since for this kind of task, we do not really want the model to get creative, I used the following parameters (which you can set in the playground and also when using the API programmatically):</p><ul><li><p>Temperature: 0</p></li><li><p>Maximum length: 4000 - &lt;length_of_the_prompt&gt;</p></li><li><p>Stop sequences: <code>```</code></p></li><li><p>Top P: 0.1</p></li><li><p>Frequency penalty: 0</p></li><li><p>Presence penalty: 0</p></li></ul><h2>Calling the OpenAI API</h2><p>Obviously, we do not want to parse every comment manually in the playground. Using the official OpenAI API is very easy. The main function basically looks like this:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-Python"><code class="hljs language-Python"><span class="hljs-keyword">import</span> json
+<span class="hljs-keyword">import</span> openai
+
+openai.api_key = <span class="hljs-string">'abcdef'</span> <span class="hljs-comment"># your API key</span>
+prompt_raw = <span class="hljs-string">'Your task is to parse an unstructured [..]'</span> <span class="hljs-comment"># see above</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">parse_job_posting</span>(<span class="hljs-params">job_posting: <span class="hljs-built_in">str</span></span>):
+    full_prompt = prompt_raw % (job_posting,) <span class="hljs-comment"># insert actual job post into prompt</span>
+    num_prompt_tokens = <span class="hljs-built_in">int</span>(<span class="hljs-built_in">len</span>(full_prompt) / <span class="hljs-number">3</span>) <span class="hljs-comment"># estimate the length of the prompt</span>
+    max_tokens = <span class="hljs-number">4000</span> - num_prompt_tokens <span class="hljs-comment"># calculate the max available tokens for the response</span>
+
+    <span class="hljs-comment"># call the OpenAI API</span>
+    response = openai.Completion.create(
+        model=<span class="hljs-string">'text-davinci-003'</span>, <span class="hljs-comment"># the best GPT-3 model</span>
+        prompt=full_prompt,
+        temperature=<span class="hljs-number">0</span>,
+        max_tokens=max_tokens,
+        top_p=<span class="hljs-number">0.1</span>,
+        stop=[<span class="hljs-string">'```'</span>],
+        echo=<span class="hljs-literal">True</span> <span class="hljs-comment"># returns the whole prompt including the completion</span>
+    )
+
+    result_raw = response.choices[<span class="hljs-number">0</span>].text
+    json_str = result_raw.split(<span class="hljs-string">'```json'</span>)[<span class="hljs-number">1</span>].strip() <span class="hljs-comment"># since we used echo=True, we can split on the json marker</span>
+
+    <span class="hljs-keyword">return</span> json.loads(json_str)</code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>The method returns the parsed data as a Python object.</p><h2>Optimizing costs - Fine-Tuning GPT / GPT-3.5 / GPT-4</h2><p>At the time of writing, OpenAI makes the following models available through their API:</p><ul><li><p>GPT-3 (InstructGPT)</p><ul><li><p>Davinci</p></li><li><p>Curie</p></li><li><p>Babbage</p></li><li><p>Ada</p></li></ul></li><li><p>GPT-3.5 (Chat)</p></li><li><p>GPT-4</p></li></ul><p>When I started this little project, there were only the GPT-3 models. Out of these four models, the Davinci model was/is the most powerful, but also the most expensive one. It costs $0.02 per 1000 tokens. A single completion with the quite long prompt as shown above consumes about 1000 to 1500 tokens, so parsing one job post costs about $0.02 to $0.03. With more than 500 posts per month, it would be around $15 per month just for parsing the data. This might be affordable in this case, but can quickly get expensive in other cases.</p><p>The next best GPT-3 model, Curie, is an order of magnitude cheaper, costing only $0.002 per 1000 tokens. I tried feeding it the same prompts, but it turned out that the quality of the results was not good enough to be usable. However, OpenAI offers the ability to fine-tune models on a custom data set. Such a custom data set essentially is a list of input/output pairs. Since I did not want to create the data set manually, I used the sophisticated, but expensive zero-shot approach using the Davinci model to create the data set, and then used this to create a fine-tuned Curie model. Using this fine-tuned model allowed to reach almost the same quality with only 10% of the costs.</p><p>I originally intended to create a longer description of this fine-tuning approach, but then the GPT-3.5 model was released. The gpt-3.5-turbo model also only costs $0.002 per 1000 tokens (i.e., the same as the Curie model), but it works almost as good as the older Davinci model when using a zero-shot approach. Although the Davinci model seems to perform slightly better than the GPT-3.5 model for the task at hand, the latter is still perfectly usable and the difference in performance does not justify the 10-times more expensive price.</p><p>Long story short: For the task at hand, using GPT-3.5 makes perfect sense, and there currently is no need for the fine-tuning work-around I originally used with the older GPT-3 models. I have not yet been able to try GPT-4, but those models again are a bit more expensive, so a reasonable trade-off might still turn out to favor the GPT-3.5 model for this use case.</p><p>Since GPT-3.5 is a "chat" model, its API is a bit different than when calling the previous models. I used almost the same prompt as above, just without the final part that starts the JSON representation, and with some additions that ask the model to omit any explanations and to output the pure JSON:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-plaintext"><code class="hljs language-plaintext">Your task is to parse an unstructured job posting and turn it into a JSON containing the most important information. The job posting can describe one or more jobs at the same company. The JSON should consist of the following information:
+ - The company name (field name: "companyName", field type: string)
+ - the location of the company (field name: "companyLocation", field type: string); if not explictily stated, you can try to infer the company's actual location from other clues, e.g., something like "Remote (US)" usually means that the company is located in the US; if the location cannot be inferred, set it to null
+ - a short description of what the company is doing or building (field name: "companyDescription", field type: string); try to keep it short (max length: ca. 300 characters)
+ - a list of advertised jobs (field name: "jobs", field type: array).
+Each element of the "jobs" array should contain the following fields:
+ - The job title (field name: "jobTitle", field type: string); the job title should be given in the singular form (i.e., Frontend Developer instead of Frontend Developers)
+ - the salary range (field name: "salary", field type: string); only include explictly stated salary amounts, otherwise set to null
+ - whether equity is part of the compensation (field name: "equity", field type: boolean)
+ - the benefits (field name: "benefits", field type: string); include things like 401k, insurance, equipment, child care, etc. if stated, otherwise set to null
+ - the location of the job (field name: "location", field type: string)
+ - whether this is a job for senior/experienced candidates (field name: "senior", field type: boolean); typically senior, staff, lead, principal, vp, cto, etc. positions are all regarded as senior level
+ - whether it is a remote opportunity (field name: "remote", field type: boolean)
+ - whether it can be done onsite from an office (field name: "onsite", field type: boolean)
+ - whether it can be done part-time (field name: "partTime", field type: boolean)
+ - whether it can be done full-time (field name: "fullTime", field type: boolean)
+ - the URL to the specific job description (field name: "jobUrl", field type: string)
+ - and any specific requirements/skills that might be stated (field name: "requirements", field type: string).
+In general, if certain information is not stated, set the respective field to null. If the company seeks more than one person for the same role, include the role only once. Please output only the pure JSON representation. Do not include any explanations, comments, thoughts, etc. The output has to be a valid JSON object which can be parsed as is.
+
+This is the job posting:
+
+%s</code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>As a chat model, GPT-3.5 expects a list of messages instead of a prompt. Obviously, in our case, we only need a single message to ask for generating the JSON:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-Python"><code class="hljs language-Python"><span class="hljs-keyword">import</span> json
+<span class="hljs-keyword">import</span> openai
+
+openai.api_key = <span class="hljs-string">'abcdef'</span> <span class="hljs-comment"># your API key</span>
+prompt_raw = <span class="hljs-string">'Your task is to parse an unstructured [..]'</span> <span class="hljs-comment"># see above</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">parse_job_posting</span>(<span class="hljs-params">job_posting: <span class="hljs-built_in">str</span></span>):
+    full_prompt = prompt_raw % (job_posting,) <span class="hljs-comment"># insert actual job post into prompt</span>
+
+    <span class="hljs-comment"># call the OpenAI API</span>
+    response = openai.ChatCompletion.create(
+        model=<span class="hljs-string">'gpt-3.5-turbo'</span>,
+        messages=[
+            {<span class="hljs-string">'role'</span>: <span class="hljs-string">'system'</span>, <span class="hljs-string">'content'</span>: <span class="hljs-string">'You are a helpful assistant that parses unstructured job postings into structured JSON data.'</span>},
+            {<span class="hljs-string">'role'</span>: <span class="hljs-string">'user'</span>, <span class="hljs-string">'content'</span>: full_prompt}
+        ],
+        temperature=<span class="hljs-number">0</span>
+    )
+
+    json_str = response.choices[<span class="hljs-number">0</span>].message.content
+
+    <span class="hljs-keyword">return</span> json.loads(json_str)</code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>This approach is what I am currently using at the <a href="https://www.hacker-jobs.com/">hacker-jobs.com</a> demonstrator. So you can check for yourself, how the GPT-3.5 model performs (using this prompt, settings, etc.; it probably can still be improved).</p><h2>Using GPT text embeddings to determine similarity of jobs</h2><p>With about 500 job posts per month, some of them advertising multiple roles, we end up with over 1000 jobs per month. As you can see on the <a href="https://www.hacker-jobs.com/">site</a>, there are several filters such as "remote", "part-time", etc. which allow you to narrow down the choices based on some general characteristics. However, a job board usually also offers to select a certain job category (e.g., "iOS developer"). Since the "Who is hiring" threads are not limited to certain types of jobs and often there are interesting roles that might not fit into the usual categories, I tried a different approach for how to sort the jobs according to one's interests: For each job, a text embedding for the job description (including the company description) is created, which then can be used to sort by similarity to a selected job.</p><p>Creating the embedding again is quite easy with the OpenAI API:</p>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg my-4">
+    <pre class="max-w-full overflow-scroll language-Python"><code class="hljs language-Python"><span class="hljs-keyword">import</span> openai
+
+openai.api_key = <span class="hljs-string">'abcdef'</span> <span class="hljs-comment"># your API key</span>
+
+<span class="hljs-keyword">def</span> <span class="hljs-title function_">get_embedding</span>(<span class="hljs-params">job_description: <span class="hljs-built_in">str</span></span>):
+    response = openai.Embedding.create(
+        model=<span class="hljs-string">"text-embedding-ada-002"</span>,
+        <span class="hljs-built_in">input</span>=job_description
+    )
+    <span class="hljs-keyword">return</span> response.data[<span class="hljs-number">0</span>].embedding</code></pre>
+  </div>
+
+  
+
+  
+
+  
+  <div class="mx-auto max-w-screen-lg prose md:prose-xl prose-stone prose-code:before:content-[&#39;&#39;] prose-code:after:content-[&#39;&#39;] text-stone-900 text-justify">
+    <p>However, there is a small challenge because of the architecture of the hacker-jobs.com website: The site is built using <a href="https://nuxt.com/">Nuxt</a>, and it is built in a way that allows to sort and filter the job list on the client. This means the whole data set is sent to the client in the first request. The data set is not really large without the embeddings, but using the raw embeddings from OpenAI would create an enormous file because the embeddings' dimension is 1536.</p><p>Since we have a very limited scope in our application, we probably do not need such a large capacity for describing the jobs. Consequently, we can try to reduce the dimensionality of our embeddings, e.g., by using an ordinary principal components analysis. On the hacker-jobs.com website, I only use embeddings with 10 dimensions, which still seem to produce reasonable results when sorting by similarity.</p><h2>Conclusion</h2><p>I hope this little article gave you some ideas how to approach information extraction from unstructured texts. Using the current generation of LLMs, it is almost trivial to get good results. Feel free to have a look at the demonstration of this approach over at <a href="https://www.hacker-jobs.com/">hacker-jobs.com</a> where you have links to the source texts besides each structured representation. This might give you some intuition for what works and where there are potential error cases.</p><p>I guess that most of the readers of this article will have played around with ChatGPT quite a bit, but if you haven't and are interested in some examples of use cases, I have previously written <a href="https://marcotm.com/works/how-to-talk-so-the-ai-will-listen">a small guide for (mostly) non-technical users that explains the basics of using both ChatGPT and also DALL-E</a>.</p><p><strong>Let's keep in touch:</strong></p><p>Feel free to follow me on <a href="https://twitter.com/mtmlog">Twitter</a>, connect on <a href="https://www.linkedin.com/in/marcotm/">LinkedIn</a>, or just shoot me a <a href="mailto:contact@marcotm.com">message</a>, especially if you are interested in working together / collaborating.</p>
+  </div>
+
+  
+
+  
+</div>
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://admin.marcotm.com/articles/information-extraction-with-large-language-models-parsing-unstructured-data-with-gpt"
+    },
+    "headline": "Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3",
+    "author": {
+      "@type": "Person",
+      "name": "Marco Maier",
+      "url": "https://marcotm.com"
+    },
+    
+    
+    "abstract": "A little write-up on how to use large language models such as GPT to extract information from unstructured texts.",
+    
+    "datePublished": "2023-03-11",
+    
+    "dateModified": "2023-03-19",
+    
+    
+    "description": "A little write-up on how to use large language models such as GPT to extract information from unstructured texts.",
+    
+    
+    "keywords": "GPT-3, GPT-3.5, GPT-4, natural language processing, information extraction, named entity recognition, machine learning, deep learning, artificial intelligence, data science, AI, ML, NLP"
+    
+  }
+</script>
+        </div>
+
+        <div class="grow"></div>
+        <div class="w-full mt-16 py-2 px-4 md:px-8 text-right text-xs text-stone-400">
+            <a href="https://marcotm.com/impressum-and-datenschutz" class="text-stone-400">Impressum &amp; Datenschutz</a>
+        </div>
+
+    </div>
+    <script src="./Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3_files/site.js"></script>
+    <script src="./Information Extraction with Large Language Models - Parsing Unstructured Data with GPT-3_files/highlight.js"></script>
+    <script>hljs.highlightAll();</script>
+
+
+</body></html>
